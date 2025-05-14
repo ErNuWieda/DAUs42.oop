@@ -1,6 +1,6 @@
 # DAUs forty-two - Das Sinnfrei-Tool
 
-[DAUs42 Logo](./assets/marvin.png) 
+![DAUs42 Logo](./assets/marvin.png) 
 
 Willkommen bei **DAUs forty-two**, dem ultimativen Tool, das absolut keinen produktiven Zweck erfüllt – und stolz darauf ist! 🚀
 Dieses Projekt ist eine humorvolle Python-Anwendung mit Tkinter-GUI, die darauf ausgelegt ist, ahnungslose Benutzer (DAUs) und alle, die einen Sinn für digitalen Unsinn haben, zu unterhalten.
