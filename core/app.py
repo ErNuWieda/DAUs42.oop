@@ -11,13 +11,14 @@ import random
 import platform
 import threading # Für fake_optimization
 
-from . import constants
 from .sound import DAUSound
-from .actions import ActionHandler # Geänderter Import
+from .actions import ActionHandler 
 from .ui_helpers import add_tooltip
 from .system_info import get_platform_display_text, get_os_details
-# from .dialogs import create_sarcastic_countdown_dialog, create_show_progress_dialog, run_fake_optimization_steps_dialog, create_sidefx_dialog, create_warning_dialog
-from .dialogs import DialogFactory # Geänderter Import
+from .dialogs import DialogFactory
+from . import constants # Zugriff auf Konstanten
+from .constants import t, welcome_texts, menu_item_texts, menubar_texts, button_texts, tooltips
+
 
 class DAUApp:
     """
@@ -31,15 +32,19 @@ class DAUApp:
     def __init__(self, root_tk_instance):
         """Initialisiert die Hauptanwendung."""
         self.root = root_tk_instance
-        self.root.title("DAUs forty-two - Das Sinnfrei-Tool")
+        self.os_name, self.distro, self.lang = get_os_details()
+        if self.lang == "de":
+            self.root.title("DAUs forty-two - Das Sinnfrei-Tool")
+        else:
+            self.root.title("DAUs forty-two - The Meaningless Tool")
         self.root.geometry("500x550") # Etwas mehr Platz für das Plattform-Label
         self.root.resizable(False, False)
         self.root.protocol("WM_DELETE_WINDOW", self._handle_exit_exception)
         self.bg = self._load_bg(bg_name="hitchhikers.jpg")
       
         # Instanzen der Handler/Factory-Klassen erstellen
-        self.action_handler = ActionHandler()
-        self.dialog_factory = DialogFactory()
+        self.action_handler = ActionHandler(self.lang)
+        self.dialog_factory = DialogFactory(self.lang)
 
         # Mache das Hauptfenster sichtbar, falls es via root.withdraw() versteckt war
         self.root.deiconify()
@@ -70,7 +75,11 @@ class DAUApp:
         Behandelt den Versuch, das Fenster über den Schließen-Button (WM_DELETE_WINDOW) zu schließen.
         Zeigt stattdessen eine humorvolle Fehlermeldung an.
         """
-        messagebox.showerror("Erwarteter Bedienerfehler", 
+        if self.lang == "de":
+            mb_title = "Erwarteter Bedienerfehler"
+        else:
+            mb_title = "Expected operator error"
+        messagebox.showerror(mb_title, 
                              "DAU exception, line 42,\ne: deprecated value 'WM_DELETE_WINDOW' not accepted!", 
                              parent=self.root)
         
@@ -80,33 +89,33 @@ class DAUApp:
 
         # Datei-Menü
         file_menu = Menu(menubar, tearoff=0)
-        file_menu.add_command(label="Neue Sinnlosigkeit", command=lambda: self.action_handler.menu_show_sinnlosigkeit(self.root))
-        file_menu.add_command(label="Alles rückgängig machen", command=lambda: self.action_handler.menu_show_undo_too_late(self.root))
+        file_menu.add_command(label=t(menu_item_texts, self.lang, "new_futility"), command=lambda: self.action_handler.menu_show_sinnlosigkeit(self.root))
+        file_menu.add_command(label=t(menu_item_texts, self.lang, "undo_all"), command=lambda: self.action_handler.menu_show_undo_too_late(self.root))
         file_menu.add_separator()
-        file_menu.add_command(label="Beenden?", command=self._handle_sarcastic_exit_prompt)
-        menubar.add_cascade(label="Datei", menu=file_menu)
+        file_menu.add_command(label=t(menu_item_texts, self.lang, "sarcastic_exit"), command=self._handle_sarcastic_exit_prompt)
+        menubar.add_cascade(label=t(menubar_texts, self.lang, "file"), menu=file_menu)
 
         # Extras-Menü
         extra_menu = Menu(menubar, tearoff=0)
-        extra_menu.add_command(label="Unsichtbare Optionen anzeigen", command=lambda: self.action_handler.menu_show_invisible_options_error(self.root))
-        extra_menu.add_command(label="Nichts tun", command=lambda: self.action_handler.menu_do_nothing_warning(self.root))
-        extra_menu.add_command(label="System analysieren", command=self._action_show_progress)
-        extra_menu.add_command(label="System optimieren", command=self._action_fake_optimization)
-        menubar.add_cascade(label="Extras", menu=extra_menu)
+        extra_menu.add_command(label=t(menu_item_texts, self.lang, "invisible_options"), command=lambda: self.action_handler.menu_show_invisible_options_error(self.root))
+        extra_menu.add_command(label=t(menu_item_texts, self.lang, "do_nothing"), command=lambda: self.action_handler.menu_do_nothing_warning(self.root))
+        extra_menu.add_command(label=t(menu_item_texts, self.lang, "analyze_system"), command=self._action_show_progress)
+        extra_menu.add_command(label=t(menu_item_texts, self.lang, "optimization"), command=self._action_fake_optimization)
+        menubar.add_cascade(label=t(menubar_texts, self.lang, "extras"), menu=extra_menu)
 
         # Hilfe-Menü
         help_menu = Menu(menubar, tearoff=0)
-        help_menu.add_command(label="Was soll das alles?", command=lambda: self.action_handler.menu_show_help_purpose(self.root))
-        help_menu.add_command(label="Easter Egg finden", command=lambda: self.action_handler.menu_show_easter_egg(self.root)) # Auch per Ctrl+B
-        menubar.add_cascade(label="Hilfe", menu=help_menu)
+        help_menu.add_command(label=t(menu_item_texts, self.lang, "help_purpose"), command=lambda: self.action_handler.menu_show_help_purpose(self.root))
+        help_menu.add_command(label=t(menu_item_texts, self.lang, "easter_egg"), command=lambda: self.action_handler.menu_show_easter_egg(self.root)) # Auch per Ctrl+B
+        menubar.add_cascade(label=t(menubar_texts, self.lang, "help"), menu=help_menu)
 
         # Meta-Menü
         meta_menu = Menu(menubar, tearoff=0)
-        meta_menu.add_command(label="Beipackzettel", command=self._call_sidefx_dialog)
-        meta_menu.add_command(label="⚠ Wichtig! ⚠", command=self._call_warning_dialog)
+        meta_menu.add_command(label=t(menu_item_texts, self.lang, "sidefx"), command=self._call_sidefx_dialog)
+        meta_menu.add_command(label=t(menu_item_texts, self.lang, "warning"), command=self._call_warning_dialog)
         meta_menu.add_separator()
-        meta_menu.add_command(label="Über DAUs forty-two", command=lambda: self.action_handler.menu_show_about(self.root))
-        menubar.add_cascade(label="Meta", menu=meta_menu)
+        meta_menu.add_command(label=t(menu_item_texts, self.lang, "about"), command=lambda: self.action_handler.menu_show_about(self.root))
+        menubar.add_cascade(label=t(menubar_texts, self.lang, "meta"), menu=meta_menu)
 
         self.root.config(menu=menubar)
 
@@ -119,8 +128,8 @@ class DAUApp:
 
     def _setup_ui_components(self):
         """Erstellt und platziert die primären UI-Komponenten (Labels, Buttons) im Hauptfenster."""
-        tk.Label(self.root, text="Willkommen bei DAUs forty-two", font=("Helvetica", 16)).pack(pady=10)
-        tk.Label(self.root, text="(DAU-Mode für Dummies aktiv)", font=("Helvetica", 11), fg="green").pack(pady=5) # pady reduziert
+        tk.Label(self.root, text=t(welcome_texts, self.lang, "welcome"), font=("Helvetica", 16)).pack(pady=10)
+        tk.Label(self.root, text=t(welcome_texts, self.lang, "active_mode"), font=("Helvetica", 11), fg="green").pack(pady=5) # pady reduziert
         
         platform_label_text = get_platform_display_text()
         platform_label = tk.Label(self.root, text=platform_label_text, font=("Helvetica", 9), fg="gray")
@@ -128,10 +137,10 @@ class DAUApp:
 
         # Konfiguration für die Standard-Aktionsbuttons
         buttons_config = [
-            ("Internet drucken", lambda: self.action_handler.print_internet(self.root), "Druckt das gesamte Internet auf Recyclingpapier"),
-            ("DAU-Konsole öffnen", lambda: self.action_handler.dau_console(self.root), "Für Menschen mit fragwürdigem IT-Wissen"),
-            ("Ultimative Antwort generieren", lambda: self.action_handler.ultimate_answer(self.root), "Antwort auf das Leben, das Universum und den ganzen Rest"),
-            ("Zufällige Ausrede", lambda: self.action_handler.random_excuse(self.root), "Wenn du wieder Mist gebaut hast – blame the Hamster"),
+            (t(button_texts, self.lang, "print_internet"), lambda: self.action_handler.print_internet(self.root), t(tooltips, self.lang, "print_internet")),
+            (t(button_texts, self.lang, "dau_console"), lambda: self.action_handler.dau_console(self.root), t(tooltips, self.lang, "dau_console")),
+            (t(button_texts, self.lang, "ultimate_answer"), lambda: self.action_handler.ultimate_answer(self.root), t(tooltips, self.lang, "ultimate_answer")),
+            (t(button_texts, self.lang, "random_excuse"), lambda: self.action_handler.random_excuse(self.root), t(tooltips, self.lang, "random_excuse")),
         ]
 
         for text, command, tooltip in buttons_config:
@@ -140,17 +149,17 @@ class DAUApp:
             add_tooltip(btn, tooltip)
             
         # Spezielle Buttons
-        btn_panic = tk.Button(self.root, text="Don't Panic!", command=self._action_dont_panic, bg="gold", fg="darkred")
+        btn_panic = tk.Button(self.root, text=t(button_texts, self.lang, "dont_panic"), command=self._action_dont_panic, bg="gold", fg="darkred")
         btn_panic.pack(pady=5, fill=tk.X, padx=50)
-        add_tooltip(btn_panic, "Beruhigung für angehende IT-Apokalypsen")
+        add_tooltip(btn_panic, t(tooltips, self.lang, "dont_panic"))
 
-        btn_expert = tk.Button(self.root, text="GOD-Mode für Mutige", command=self._action_confirm_expert_mode, fg="blue")
+        btn_expert = tk.Button(self.root, text=t(button_texts, self.lang, "god_mode"), command=self._action_confirm_expert_mode, fg="blue")
         btn_expert.pack(pady=5, fill=tk.X, padx=50)
-        add_tooltip(btn_expert, "Aktiviert nutzlose Funktionen mit Stil")
+        add_tooltip(btn_expert, t(tooltips, self.lang, "god_mode"))
 
-        btn_exit = tk.Button(self.root, text="Programm beenden", command=self._handle_sarcastic_exit_prompt)
+        btn_exit = tk.Button(self.root, text=t(button_texts, self.lang, "exit_program"), command=self._handle_sarcastic_exit_prompt)
         btn_exit.pack(pady=15, fill=tk.X, padx=50) # Mehr pady oben
-        add_tooltip(btn_exit, "Funktionalität entfernt")
+        add_tooltip(btn_exit, t(tooltips, self.lang, "exit_program"))
     
     def _bind_events(self):
         """Bindet Tastenkombinationen an spezifische Aktionen."""
@@ -187,14 +196,23 @@ class DAUApp:
         # Wiederhole die Abfragen
         for _ in range(repetitions):
             # Wähle eine zufällige Antwort, die nicht dieselbe ist wie die vorherige
-            response = random.choice([r for r in constants.exit_responses if r != previous_response])
+            response = random.choice([r for r in constants.exit_responses[self.lang].values() if r != previous_response])
             previous_response = response
             
-            if not messagebox.askretrycancel("Beenden?", response, parent=self.root):
+            if self.lang == "de":
+                title = "Beenden?"
+                warn_title = "Letzte Warnung"
+                warn_text = "Selbstzerstörungssequenz einleiten?"
+            else:
+                title = "Exit?"
+                warn_title = "Last warning"
+                warn_text = "Confirm self-destruction sequence?"
+
+            if not messagebox.askretrycancel(title, response, parent=self.root):
                 return  # Benutzer hat Abbrechen gewählt
         
         # Letzte Warnung, bevor die Selbstzerstörungssequenz ausgelöst wird
-        confirm = messagebox.askyesno("Letzte Warnung", "Selbstzerstörungssequenz einleiten?", parent=self.root)
+        confirm = messagebox.askyesno(warn_title, warn_text, parent=self.root)
         if confirm:
             self.dialog_factory.create_sarcastic_countdown_dialog(self.root, exit_exception_callback=self._handle_exit_exception)
     
@@ -206,16 +224,32 @@ class DAUApp:
         """Fragt den Benutzer, ob der "GOD-Mode" aktiviert werden soll und führt entsprechende Aktionen aus."""
         snd = DAUSound()
         warning_icon = random.choice(constants.warning_icons)
-        result = messagebox.askyesno("GOD-Mode aktivieren", 
-                                     f"{warning_icon} Echt jetzt?\nSind Sie ganz sicher was Sie da tun? 🤔",
-                                     parent=self.root)
+        if self.lang == "de":
+            title = "GOD-Modus aktivieren"
+            text = f"{warning_icon} Echt jetzt?\nSind Sie ganz sicher was Sie da tun? 🤔"
+        else:
+            title = "Activate GOD-mode"
+            text = f"{warning_icon} Really?\nAre you sure what you're doing? 🤔"
+        result = messagebox.askyesno(title, text, parent=self.root)
         if result:
             self._action_show_progress() # Zeige den "Analyse"-Fortschrittsbalken
             snd.play_drama()
-            messagebox.showwarning("Hinweis", "Sie haben jetzt Zugriff auf sinnlose Optionen auf höchstem Niveau.", parent=self.root)
+            if self.lang == "de":
+                title = "Hinweis"
+                text = "Sie haben jetzt Zugriff auf sinnlose Optionen auf höchstem Niveau."
+            else:
+                title = "Hint"
+                text = "You now have access to meaningless options at the top level."
+            messagebox.showwarning(title, text, parent=self.root)
         else:
             snd.play_ok()
-            messagebox.showinfo("Puuh...", "Das war knapp...\nSie sind nicht Gott!", parent=self.root)
+            if self.lang == "de":
+                title = "Puuh"
+                text = "Das war knapp...\nSie sind nicht Gott!"
+            else:
+                title = "Pooh"
+                text = "That was close...\nYou are not God!"
+            messagebox.showinfo(title, text, parent=self.root)
 
     def _event_expert_mode_toggle(self, event=None): # Wird durch Ctrl+E ausgelöst
         """Event-Handler zum Umschalten des Expertenmodus (via Tastenkombination)."""
@@ -224,17 +258,29 @@ class DAUApp:
     def _event_dev_exit(self, event=None): # Wird durch Ctrl+Q ausgelöst
         """Event-Handler für den "Entwickler-Exit" (via Tastenkombination), beendet die Anwendung sofort."""
         snd = DAUSound()
-        os_name, distro = get_os_details()
-        msg = f"💀 Exitus Developus aktiviert auf {os_name}-System\n\n"
+        if self.lang == "de":
+            msg = f"💀 Exitus Developus aktiviert auf {self.os_name}-System\n\n"
 
-        if os_name == "Linux":
-            msg += f"🐧 DAU auf Linux detected – Distro: {distro if distro else 'Unbekannt'}"
-        elif os_name == "Windows":
-            msg += "🪟 OS für DAUs. Was zu erwarten war..."
-        elif os_name == "Darwin": # macOS
-            msg += "🍏 Auf einem Mac? Dann ist der Fehler definitiv teuer."
+            if self.os_name == "Linux":
+                msg += f"🐧 DAU auf Linux entdeckt – Distro: {self.distro if self.distro else 'Unbekannt'}"
+            elif self.os_name == "Windows":
+                msg += "🪟 OS für DAUs. Was zu erwarten war..."
+            elif self.os_name == "Darwin": # macOS
+                msg += "🍏 Auf einem Mac? Dann ist der Fehler definitiv teuer."
+            else:
+                msg += "🤖 Unbekanntes Betriebssystem – gute Reise ins Daten-Nirwana."
+
         else:
-            msg += "🤖 Unbekanntes Betriebssystem – gute Reise ins Daten-Nirwana."
+            msg = f"💀 Exitus Developus activated on {self.os_name}\n\n"
+
+            if self.os_name == "Linux":
+                msg += f"🐧 DAU on Linux detected – Distro: {self.distro if self.distro else 'Unknown'}"
+            elif self.os_name == "Windows":
+                msg += "🪟 OS for DAUs. What was to be expected..."
+            elif self.os_name == "Darwin": # macOS
+                msg += "🍏 On a Mac? Then the error is definitely expensive."
+            else:
+                msg += "🤖 Unknown Operating System – Have a good trip to Data-Nirvana."
 
         messagebox.showwarning("Exitus Developus", msg, parent=self.root)
         snd.play_beam()
@@ -245,20 +291,47 @@ class DAUApp:
         Startet den "Fake-Optimierungsprozess".
         Das Verhalten unterscheidet sich je nach Betriebssystem.
         """
-        os_name, _ = get_os_details()
+        os_name = self.os_name
         if os_name == "Linux":
-            messagebox.showwarning("Warum?", "Sinnloser als diese Software!\nAuf der richtigen Seite des Kernels du bist. 🧙‍♂️", parent=self.root)
+            if self.lang == "de":
+                title = "Warum?"
+                text = "Sinnloser als diese Software!\nAuf der richtigen Seite des Kernels du bist!🧙‍♂️"
+            else:
+                title = "Why?"
+                text = "Meaningless as this software!\nOn the right side of the kernel you are!🧙‍♂️"
+            messagebox.showwarning(title, text , parent=self.root)
             return
         elif os_name == "Windows":
-            confirm = messagebox.askyesno("Systemoptimierung", "Oha, das dauert einen Moment!\nMöchtest du fortfahren?", parent=self.root)
+            if self.lang == "de":
+                title_confirm = "Systemoptimierung"
+                text_confirm = "Oha, das dauert einen Moment!\nMöchtest du fortfahren?"
+                title_hint = "Hinweis"
+                text_hint = "Du wolltest es so...\nEinen Moment bitte. Computer nicht ausschalten!"
+                title_cancel = "Abgebrochen"
+                text_cancel = "Vielleicht besser so. 😉"
+            else:
+                title_confirm = "Systemoptimization"
+                text_confirm = "Oha, that takes a moment!\nDo you want to continue?"
+                title_hint = "Hint"
+                text_hint = "You wanted it this way...\nOne moment please. Don't turn off the computer!"
+                title_cancel = "Canceled"
+                text_cancel = "Maybe better this way. 😉"
+            confirm = messagebox.askyesno(title_confirm, text_confirm, parent=self.root)
+
             if not confirm:
-                messagebox.showinfo("Abgebrochen", "Vielleicht besser so. 😉", parent=self.root)
+                messagebox.showinfo(title_cancel, text_cancel, text_hint, parent=self.root)
                 return
-            messagebox.showinfo("Hinweis", "Du wolltest es so...\nEinen Moment bitte. Computer nicht ausschalten!", parent=self.root)
+            messagebox.showinfo(title_hint, text_hint, parent=self.root)
             # Starte die Fake-Optimierung in einem Thread, um die GUI nicht zu blockieren
             threading.Thread(target=self.dialog_factory.run_fake_optimization_steps_dialog, args=(self.root, self._handle_exit_exception), daemon=True).start()
         else: # macOS oder andere
-             messagebox.showinfo("Systemoptimierung", "Dein System ist bereits perfekt... oder so. 😉", parent=self.root)
+            if self.lang == "de":
+                title = "Systemoptimierung"
+                text = "Dein System ist bereits perfekt... oder so. 😉"
+            else:
+                title = "Systemoptimization"
+                text = "Your system is already perfect... or so. 😉"
+            messagebox.showinfo(title, text, parent=self.root)
 
     # --- Methoden zum Aufrufen der ausgelagerten Dialoge ---
     def _call_sidefx_dialog(self):

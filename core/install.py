@@ -7,6 +7,7 @@ from tkinter import Toplevel, Label, Button, messagebox
 from PIL import Image, ImageTk
 import pathlib
 import os
+from .constants import t, install_steps
 
 class DAUFakeInstaller():
     """
@@ -15,11 +16,16 @@ class DAUFakeInstaller():
     Zeigt ein Fenster mit einer Animation und fiktiven Installationsschritten an,
     bevor die eigentliche Hauptanwendung gestartet wird.
     """
-    def __init__(self, root_tk_instance):
+    def __init__(self, root_tk_instance, lang):
         """Initialisiert das Fake-Installationsfenster."""
         self.root = root_tk_instance
+        self.lang = lang
+        if self.lang == "de":
+            title = "Installiere galaktische Systemkomponenten..."
+        else:
+            title = "Installing galactic system components..."
         self.install_window = tk.Toplevel(self.root)
-        self.install_window.title("Installiere galaktische Systemkomponenten...")
+        self.install_window.title(title)
         self.install_window.geometry("400x200")
         self.install_window.resizable(False, False)
         # Stellt sicher, dass das Installationsfenster im Vordergrund ist
@@ -28,6 +34,7 @@ class DAUFakeInstaller():
         self.install_window.protocol("WM_DELETE_WINDOW", lambda: None)
         self.marvins_pic = self._load_picture("marvin.png")
         self._show_picture()
+           
 
     def _load_picture(self, picture_name):
         """
@@ -66,13 +73,18 @@ class DAUFakeInstaller():
         install_label = Label(self.install_window, text="Initialisiere...", font=("Arial", 14))
         install_label.pack(padx=20, pady=20)
 
-        install_steps = [
-            "Handtuch", "Babelfisch", "Sub-Etha-Sender",
-            "Vogonen-Poesie-Modul", "Unwahrscheinlichkeits-Drive", "Deep Thought KI", 
-            "geheime Tastenkombinationen", "Sarkasmus-Modul V2"
+        steps = [
+            t(install_steps, self.lang, "towel"),
+            t(install_steps, self.lang, "babel_fish"),
+            t(install_steps, self.lang, "sub_etha"),
+            t(install_steps, self.lang, "vogon_poetry"),
+            t(install_steps, self.lang, "improbability"),
+            t(install_steps, self.lang, "deep_thought"),
+            t(install_steps, self.lang, "secret_keys"),
+            t(install_steps, self.lang, "sarcasm_v2")
         ]
         
-        num_steps = len(install_steps)
+        num_steps = len(steps)
         segment_angle = 360 / num_steps if num_steps > 0 else 0
 
         def do_install_step(index=0):
@@ -88,7 +100,10 @@ class DAUFakeInstaller():
                 im_tk = ImageTk.PhotoImage(im_rotated)
                 self.pic_label.config(image=im_tk)
                 self.pic_label.image = im_tk # Referenz behalten
-                install_label.config(text=f"Installiere {install_steps[index]}...")
+                if self.lang == "de":
+                    install_label.config(text=f"Installiere {steps[index]}...")
+                else:
+                    install_label.config(text=f"Installing {steps[index]}...")
                 
                 # UI aktualisieren erzwingen, bevor die Pause beginnt (optional, aber kann helfen)
                 # self.install_window.update_idletasks() 
@@ -98,9 +113,13 @@ class DAUFakeInstaller():
                 self.install_window.after(800, lambda: schedule_next_install_step(index))
             else:
                 # Alle Schritte abgeschlossen
-                messagebox.showinfo("Installation abgeschlossen", 
-                                    "Alle absurden Erweiterungen erfolgreich installiert!", 
-                                    parent=self.install_window)
+                if self.lang == "de":
+                    mb_title = "Installation abgeschlossen"
+                    mb_text = "Alle absurden Erweiterungen erfolgreich installiert!"
+                else:
+                    mb_title = "Installation complete"
+                    mb_text = "All absurd extensions installed!"
+                messagebox.showinfo(mb_title, mb_text, parent=self.install_window)
                 if self.on_complete_callback:
                     self.on_complete_callback()
                 

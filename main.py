@@ -7,6 +7,7 @@ und anschließend die Hauptanwendung DAUApp.
 import tkinter as tk
 from core.app import DAUApp
 from core.install import DAUFakeInstaller
+import locale
 
 class ApplicationOrchestrator:
     """
@@ -14,7 +15,7 @@ class ApplicationOrchestrator:
     Verantwortlich für die Initialisierung des Tkinter-Hauptfensters,
     das Ausführen des Fake-Installers und das Starten der Hauptanwendung.
     """
-    def __init__(self):
+    def __init__(self, lang):
         """Initialisiert den ApplicationOrchestrator und das Tkinter-Hauptfenster."""
         self.root = tk.Tk()
         # Das Hauptfenster initial absenken, wie im ursprünglichen Skript.
@@ -22,19 +23,26 @@ class ApplicationOrchestrator:
         self.root.withdraw()
         self.root.lower()
         self.main_app = None
+        self.lang = lang
+
+
 
     def _launch_main_app(self):
         """Wird als Callback nach dem Installer aufgerufen, um die Hauptanwendung zu starten."""
         self.main_app = DAUApp(self.root)
 
+
     def run(self):
         """Startet den Fake-Installer und anschließend die Hauptanwendung."""
-        fake_installer = DAUFakeInstaller(self.root)
+        fake_installer = DAUFakeInstaller(self.root, self.lang)
         # Die Methode zum Starten der Haupt-App als Callback übergeben
         fake_installer.start_installation(on_complete_callback=self._launch_main_app)
         
         self.root.mainloop()
 
 if __name__ == "__main__":
-    orchestrator = ApplicationOrchestrator()
+    lang = locale.getlocale()[0]
+    lang = lang.split("_")[0]
+
+    orchestrator = ApplicationOrchestrator(lang)
     orchestrator.run()
