@@ -69,7 +69,7 @@ class DialogFactory:
 
         y_offset = 20 # Initialer Y-Versatz von oben
 
-        ok_button = Button(poetry_dialog, text="🤪  OMG  🤪", 
+        ok_button = Button(poetry_dialog, text="🤮  aaargh... 🤮", 
                            command=poetry_dialog.destroy, 
                            fg="cyan", bg="magenta", relief="raised", padx=10, pady=5)
         
@@ -384,7 +384,7 @@ class DialogFactory:
             blu_btn_txt = "🤪 Hiccs..."
             grn_btn_txt = "💀 I'll die" 
         btn_frame = tk.Frame(warning_dialog, bg="black") # Dieser Frame wird auf den Canvas gelegt
-        Button(btn_frame, text="😬 Aaargh!", bg="white", fg="gray", command=lambda: self.show_vogon_poetry(warning_dialog, exit_exception_callback)).pack(side=tk.LEFT, padx=2)
+        Button(btn_frame, text="😱 OMG!", bg="white", fg="gray", command=lambda: self.show_vogon_poetry(warning_dialog, exit_exception_callback)).pack(side=tk.LEFT, padx=2)
         Button(btn_frame, text=blu_btn_txt, bg="blue", fg="white", command=random_excuse_callback).pack(side=tk.LEFT, padx=2)
         Button(btn_frame, text=grn_btn_txt, bg="green", fg="white", command=sidefx_callback).pack(side=tk.LEFT, padx=2)
         Button(btn_frame, text="🤯 Panic!", bg="orange", fg="green", command=dont_panic_callback).pack(side=tk.LEFT, padx=2)
