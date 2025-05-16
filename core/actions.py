@@ -16,6 +16,10 @@ class ActionHandler:
     def __init__(self, lang):
         """Initialisiert den ActionHandler mit einem SoundPlayer und System-Sprache."""
         self.lang = lang
+        self.previous_status = None
+        self.previous_response = None
+        self.previous_quote = None
+        self.previous_excuse = None
         self.sound_player = DAUSound()
 
     # --- Secret Action ---
@@ -35,13 +39,10 @@ class ActionHandler:
         Simuliert das Drucken des Internets.
         Zeigt eine zufällige Statusmeldung aus constants.internet_status an.
         """
-        # Hinweis: Die Logik zur Vermeidung von Wiederholungen wirkt nur innerhalb dieses einen Aufrufs.
-        # Um Wiederholungen über mehrere Aufrufe hinweg zu vermeiden, müsste `previous_status`
-        # ein Instanzattribut oder anderweitig persistent sein. Für den humoristischen Zweck
-        # dieser Anwendung ist das aktuelle Verhalten aber vermutlich ausreichend.
-        previous_status = None # Hinweis: Diese Logik verhindert Wiederholungen nur innerhalb eines Aufrufs, nicht über mehrere.
-        status = random.choice([r for r in constants.internet_status[self.lang].values() if r != previous_status])
-        previous_status = status
+        # Um Wiederholungen über mehrere Aufrufe hinweg zu vermeiden, ist `previous_status`
+        # ein Instanzattribut
+        status = random.choice([r for r in constants.internet_status[self.lang].values() if r != self.previous_status])
+        self.previous_status = status
         if self.lang == "de":
             messagebox.showinfo("Internetdruck", status, parent=parent)
         else:
@@ -50,19 +51,17 @@ class ActionHandler:
 
     def dau_console(self, parent):
         """Zeigt eine zufällige, sarkastische Antwort für "DAUs" an."""
-        previous_response = None
-        response = random.choice([r for r in constants.dau_responses[self.lang].values() if r != previous_response])
-        previous_response = response
+        response = random.choice([r for r in constants.dau_responses[self.lang].values() if r != self.previous_response])
+        self.previous_response = response
         if self.lang == "de":
             messagebox.showinfo("DAUs Konsole", response, parent=parent)
         else:
             messagebox.showinfo("DAU-console", response, parent=parent)
 
     def ultimate_answer(self, parent):
-        previous_quote = None
         """Zeigt eine zufällige "ultimative Antwort" oder ein Zitat zum Thema 42 an."""
-        quote = random.choice([r for r in constants.random_quotes[self.lang].values() if r != previous_quote])
-        previous_quote = quote
+        quote = random.choice([r for r in constants.random_quotes[self.lang].values() if r != self.previous_quote])
+        self.previous_quote = quote
         if self.lang == "de":
             messagebox.showinfo("Ultimative Antwort", quote, parent=parent)
         else:
@@ -70,9 +69,8 @@ class ActionHandler:
 
     def random_excuse(self, parent):
         """Zeigt eine zufällige Ausrede an."""
-        previous_excuse = None
-        excuse = random.choice([r for r in constants.excuses[self.lang].values() if r != previous_excuse])
-        previous_excuse = excuse
+        excuse = random.choice([r for r in constants.excuses[self.lang].values() if r != self.previous_excuse])
+        self.previous_excuse = excuse
         if self.lang == "de":
             messagebox.showinfo("Zufällige Ausrede", excuse, parent=parent)
         else:
@@ -81,9 +79,8 @@ class ActionHandler:
 
     def dont_panic(self, parent):
         """Zeigt ein beruhigendes Zitat an und spielt einen Soundeffekt."""
-        previous_quote = None
-        quote = random.choice([r for r in constants.calming_quotes[self.lang].values() if r != previous_quote])
-        previous_quote = quote
+        quote = random.choice([r for r in constants.calming_quotes[self.lang].values() if r != self.previous_quote])
+        self.previous_quote = quote
         messagebox.showinfo("Don't Panic!", quote, parent=parent)
         self.sound_player.play_ok()
 
